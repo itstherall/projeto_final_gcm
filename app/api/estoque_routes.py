@@ -100,4 +100,23 @@ def create_estoque_blueprint(service: EstoqueService) -> Blueprint:
             "estoque": produto.estoque,
         }), 200
 
+    # Realização de venda:
+    @estoque_bp.post("/loja/venda")
+    def realizar_venda():
+        dados = request.get_json(silent=True)
+        if not isinstance(dados, dict):
+            return jsonify({"erro": "Corpo da requisição deve ser um JSON válido."}), 400
+
+        if "itens" not in dados:
+            return jsonify({"erro": "O campo 'itens' é obrigatório."}), 400
+
+        try:
+            resultado = service.realizar_venda(dados["itens"])
+        except DadosInvalidosError as exc:
+            return jsonify({"erro": str(exc)}), 400
+        except ProdutoNaoEncontradoError as exc:
+            return jsonify({"erro": str(exc)}), 404
+
+        return jsonify(resultado), 201
+
     return estoque_bp

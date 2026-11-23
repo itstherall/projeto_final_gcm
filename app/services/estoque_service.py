@@ -90,3 +90,74 @@ class EstoqueService:
         produto.estoque -= quantidade
 
         return self._repository.salvar(produto)
+
+# REALIZAÇÃO DE VENDA:
+    def realizar_venda(self, itens: object) -> dict:
+        if not isinstance(itens, list) or len(itens) == 0:
+            raise DadosInvalidosError("O campo 'itens' deve ser uma lista não vazia.")
+
+        itens_validados = []
+        for item in itens:
+            if not isinstance(item, dict):
+                raise DadosInvalidosError("Cada item da venda deve ser um objeto JSON válido.")
+
+            if "codigo" not in item or "quantidade" not in item:
+                raise DadosInvalidosError(
+                    "Cada item deve conter os campos 'codigo' e 'quantidade'."
+                )
+
+            codigo = item["codigo"]
+            quantidade = item["quantidade"]
+
+            if not isinstance(codigo, int) or isinstance(codigo, bool):
+                raise DadosInvalidosError("O campo 'codigo' deve ser um número inteiro.")
+
+            if not isinstance(quantidade, int) or isinstance(quantidade, bool):
+                raise DadosInvalidosError("O campo 'quantidade' deve ser um número inteiro.")
+
+            if quantidade <= 0:
+                raise DadosInvalidosError(
+                    "O campo 'quantidade' deve ser um número inteiro positivo."
+                )
+
+            itens_validados.append((codigo, quantidade))
+
+        produtos_por_codigo = {}
+        quantidades_totais = {}
+        for codigo, quantidade in itens_validados:
+            if codigo not in produtos_por_codigo:
+                produto = self._repository.buscar_por_codigo(codigo)
+                if produto is None:
+                    raise ProdutoNaoEncontradoError(
+                        f"Produto com código {codigo} não encontrado."
+                    )
+                produtos_por_codigo[codigo] = produto
+
+            quantidades_totais[codigo] = quantidades_totais.get(codigo, 0) + quantidade
+
+        for codigo, quantidade_total in quantidades_totais.items():
+            if produtos_por_codigo[codigo].estoque < quantidade_total:
+                raise DadosInvalidosError(
+                    f"Estoque insuficiente para o produto de código {codigo}."
+                )
+
+        total = Decimal("0")
+        itens_resposta = []
+        for codigo, quantidade in itens_validados:
+            produto = produtos_por_codigo[codigo]
+            produto.estoque -= quantidade
+            self._repository.salvar(produto)
+
+            subtotal = produto.preco * quantidade
+            total += subtotal
+            itens_resposta.append({
+                "codigo": produto.codigo,
+                "quantidade": quantidade,
+                "subtotal": float(subtotal),
+                "estoque": produto.estoque,
+            })
+
+        return {
+            "total": float(total),
+            "itens": itens_resposta,
+        }
