@@ -36,14 +36,16 @@ class EstoqueService:
         produto = Produto(codigo=codigo, preco=preco_decimal, estoque=0)
         return self._repository.salvar(produto)
 
-    #BUSCA PRODUTO:
-    def buscar_produto(self, codigo: int) -> Produto:
-                produto = self._repository.buscar_por_codigo(codigo)
-    
-                if produto is None:
-                    raise ProdutoNaoEncontradoError("Produto não encontrado.")
-                
-                return produto  
+    # BUSCA PRODUTO:
+    def buscar_produto(self, codigo: object) -> Produto:
+        if not isinstance(codigo, int) or isinstance(codigo, bool):
+            raise DadosInvalidosError("O campo 'codigo' deve ser um número inteiro.")
+
+        produto = self._repository.buscar_por_codigo(codigo)
+        if produto is None:
+            raise ProdutoNaoEncontradoError("Produto não encontrado.")
+
+        return produto
 
     #ENTRADA PRODUTO:
     def entrada_estoque(self, codigo: object, quantidade: object) -> Produto:
