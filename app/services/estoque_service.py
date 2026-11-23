@@ -36,6 +36,7 @@ class EstoqueService:
         produto = Produto(codigo=codigo, preco=preco_decimal, estoque=0)
         return self._repository.salvar(produto)
 
+    #BUSCA PRODUTO:
     def buscar_produto(self, codigo: int) -> Produto:
                 produto = self._repository.buscar_por_codigo(codigo)
     
@@ -44,6 +45,7 @@ class EstoqueService:
                 
                 return produto  
 
+    #ENTRADA PRODUTO:
     def entrada_estoque(self, codigo: object, quantidade: object) -> Produto:
 
         #Validação dos campos 'codigo' e 'quantidade':
@@ -57,9 +59,32 @@ class EstoqueService:
             raise DadosInvalidosError("O campo 'quantidade' deve ser um número inteiro positivo.")
 
         produto = self._repository.buscar_por_codigo(codigo)
-        
+
         if produto is None:
             raise ProdutoNaoEncontradoError(f"Produto com código {codigo} não encontrado.")
 
         produto.estoque += quantidade
-        return self._repository.salvar(produto)  
+        return self._repository.salvar(produto) 
+
+
+    #SAIDA PRODUTO:
+    def saida_estoque(self, codigo: object, quantidade: object) -> Produto:
+        
+        #Validação dos campos 'codigo' e 'quantidade':
+        if not isinstance(codigo, int) or isinstance(codigo, bool):
+            raise DadosInvalidosError("O código deve ser um número inteiro.")
+
+        if not isinstance(quantidade, int) or isinstance(quantidade, bool):
+            raise DadosInvalidosError("A quantidade deve ser um número inteiro.")
+
+        if quantidade <= 0:
+            raise DadosInvalidosError("A quantidade deve ser maior que zero.")
+
+        produto = self.buscar_produto(codigo)
+
+        if produto.estoque < quantidade:
+            raise DadosInvalidosError("Estoque insuficiente.")
+
+        produto.estoque -= quantidade
+
+        return produto
