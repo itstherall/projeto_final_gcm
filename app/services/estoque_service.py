@@ -87,4 +87,4 @@ class EstoqueService:
 
         produto.estoque -= quantidade
 
-        return produto
+        return self._repository.salvar(produto)

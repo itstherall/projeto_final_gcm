@@ -45,19 +45,19 @@ def create_estoque_blueprint(service: EstoqueService) -> Blueprint:
         }), 200
 
     #Entrada de estoque:
-    @estoque_bp.post("/loja/estoque/<int:codigo>/entrada")
-    def entrada_estoque():
+    @estoque_bp.put("/loja/produto/<int:codigo>/entrada")
+    def entrada_estoque(codigo):
         dados = request.get_json(silent=True)
 
         if not isinstance(dados, dict):
             return jsonify({"erro": "Corpo da requisição deve ser um JSON válido."}), 400
 
-        if "codigo" not in dados or "quantidade" not in dados:
-            return jsonify({"erro": "Os campos 'codigo' e 'quantidade' são obrigatórios."}), 400
+        if "quantidade" not in dados:
+            return jsonify({"erro": "O campo 'quantidade' são obrigatórios."}), 400
 
         try:
             produto = service.entrada_estoque(
-                dados["codigo"],
+                codigo,
                 dados["quantidade"]
             )
         except DadosInvalidosError as exc:
@@ -94,6 +94,9 @@ def create_estoque_blueprint(service: EstoqueService) -> Blueprint:
             "codigo": produto.codigo,
             "estoque": produto.estoque
         }), 200
+
+
+    
 
 
     
