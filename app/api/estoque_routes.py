@@ -39,10 +39,13 @@ def create_estoque_blueprint(service: EstoqueService) -> Blueprint:
         except ProdutoNaoEncontradoError as exc:
             return jsonify({"erro": str(exc)}), 404
 
-        return jsonify(produto.to_dict()), 200
+        return jsonify({
+        "codigo": produto.codigo,
+        "estoque": produto.estoque
+        }), 200
 
     #Entrada de estoque:
-    @estoque_bp.post("/loja/estoque/entrada")
+    @estoque_bp.post("/loja/estoque/<int:codigo>/entrada")
     def entrada_estoque():
         dados = request.get_json(silent=True)
 
@@ -64,6 +67,33 @@ def create_estoque_blueprint(service: EstoqueService) -> Blueprint:
 
         return jsonify(produto.to_dict()), 200
 
+    #Saida de estoque:
+    @estoque_bp.put("/loja/produto/<int:codigo>/saida")
+    def saida_estoque(codigo):
+        dados = request.get_json(silent=True)
+
+        if not isinstance(dados, dict):
+            return jsonify({"erro": "Corpo da requisição deve ser um JSON válido."}), 400
+
+        if "quantidade" not in dados:
+            return jsonify({"erro": "O campo 'quantidade' é obrigatório."}), 400
+
+        try:
+            produto = service.saida_estoque(
+                codigo,
+                dados["quantidade"]
+            )
+
+        except DadosInvalidosError as exc:
+            return jsonify({"erro": str(exc)}), 400
+
+        except ProdutoNaoEncontradoError as exc:
+            return jsonify({"erro": str(exc)}), 404
+
+        return jsonify({
+            "codigo": produto.codigo,
+            "estoque": produto.estoque
+        }), 200
 
 
     
