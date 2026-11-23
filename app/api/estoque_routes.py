@@ -31,7 +31,7 @@ def create_estoque_blueprint(service: EstoqueService) -> Blueprint:
         return jsonify(produto.to_dict()), 201
 
     #Busca de produto Estoque:
-    @estoque_bp.get("/loja/estoque/<int:codigo>")
+    @estoque_bp.get("/loja/produto/<int:codigo>/estoque")
     def consultar_estoque(codigo):
         try:
             produto = service.buscar_produto(codigo)
