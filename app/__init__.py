@@ -1,11 +1,10 @@
-from flask import Flask
+def create_app():
+    from flask import Flask
 
-from app.api.estoque_routes import create_estoque_blueprint
-from app.repositories.produto_repository import ProdutoRepository
-from app.services.estoque_service import EstoqueService
+    from app.api.estoque_routes import create_estoque_blueprint
+    from app.repositories.produto_repository import ProdutoRepository
+    from app.services.estoque_service import EstoqueService
 
-
-def create_app() -> Flask:
     app = Flask(__name__)
     app.json.sort_keys = False
     app.json.ensure_ascii = False

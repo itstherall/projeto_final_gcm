@@ -68,12 +68,12 @@ status esperados.
 
 ### Convenções gerais
 
-  Campo          Tipo esperado
-  -------------- ---------------
-  `codigo`       Inteiro
-  `quantidade`   Inteiro
-  `estoque`      Inteiro
-  `preco`        Decimal
+| Campo | Tipo esperado |
+| :--- | :--- |
+| `codigo` | Inteiro |
+| `quantidade` | Inteiro |
+| `estoque` | Inteiro |
+| `preco` | Decimal |
 
 -   **400 Bad Request**: campo obrigatório ausente, tipo inválido ou
     dados fora das regras de validação.
@@ -130,6 +130,7 @@ Não possui corpo na requisição.
 
 **Possível erro**
 
+- `400 Bad Request`: código informado não é um número inteiro válido.
 -   `404 Not Found`: produto não cadastrado.
 
 ### 3. Entrada de estoque
@@ -249,23 +250,25 @@ precisar passar pela API REST.
 
 Uma sugestão de organização:
 
-``` text
-projeto/
+```text
+projeto_final_gcm/
 ├── app/
 │   ├── __init__.py
-│   ├── routes/
+│   ├── api/
 │   │   ├── __init__.py
-│   │   └── loja.py
-│   ├── services/
-│   │   ├── __init__.py
-│   │   └── estoque_service.py
+│   │   └── estoque_routes.py
 │   ├── repositories/
 │   │   ├── __init__.py
 │   │   └── produto_repository.py
-│   └── models/
+│   └── services/
 │       ├── __init__.py
-│       └── produto.py
+│       └── estoque_service.py
+├── frontend/
+│   └── console.py
 ├── tests/
+│   ├── __init__.py
+│   ├── test_api.py
+│   └── test_services.py
 ├── run.py
 ├── requirements.txt
 └── README.md
@@ -273,18 +276,11 @@ projeto/
 
 ### Responsabilidade de cada camada
 
--   **Routes (API):** recebe as requisições HTTP, valida a estrutura
-    básica dos dados, chama os serviços e transforma os resultados em
-    respostas JSON com os códigos HTTP adequados.
--   **Services (negócio):** implementa as regras de cadastro, consulta,
-    entrada, saída e venda. Não deve depender do Flask nem conhecer
-    detalhes de requisições HTTP.
--   **Repositories (persistência):** concentra as operações de
-    armazenamento e recuperação dos produtos. A implementação pode
-    começar em memória e ser substituída posteriormente por um banco de
-    dados.
--   **Models:** representa o produto e seus atributos (`codigo`, `preco`
-    e `estoque`).
+- **API REST (`app/api/estoque_routes.py`):** recebe as requisições HTTP, valida a estrutura básica dos dados e os parâmetros de rota, aciona a camada de serviço e retorna respostas JSON com os códigos HTTP adequados.
+- **Serviços (`app/services/estoque_service.py`):** concentra todas as regras de negócio (cadastro, consulta, entrada, saída e venda atômica). É totalmente independente do Flask e do front-end.
+- **Repositório e Modelo (`app/repositories/produto_repository.py`):** define o modelo `Produto` (`codigo`, `preco` e `estoque`) e gerencia o armazenamento em memória sem limite predefinido de quantidade.
+- **Front-end (`frontend/console.py`):** interface em linha de comando que consome exclusivamente os endpoints da API REST.
+- **Ponto de entrada (`run.py`):** inicializa a aplicação Flask por meio de `create_app()` (em `app/__init__.py`) e inicia o servidor local.
 
 ## Tecnologias
 
@@ -302,8 +298,8 @@ projeto/
 ### 1. Clonar o repositório
 
 ``` bash
-git clone <URL_DO_REPOSITORIO>
-cd <NOME_DO_PROJETO>
+git clone https://github.com/itstherall/projeto_final_gcm.git
+cd projeto_final_gcm
 ```
 
 ### 2. Criar e ativar o ambiente virtual
@@ -328,25 +324,13 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Caso o arquivo `requirements.txt` ainda não esteja configurado, instale
-o Flask:
-
-``` bash
-pip install Flask
-```
-
 ### 4. Iniciar a aplicação
-
-O comando depende do ponto de entrada definido no projeto. Se a
-aplicação for iniciada pelo arquivo `run.py`:
 
 ``` bash
 python run.py
 ```
 
-A URL local e a porta serão as configuradas na aplicação. Em uma
-configuração comum de desenvolvimento Flask, o endereço é
-`http://127.0.0.1:5000`.
+Por padrão, o servidor de desenvolvimento Flask é iniciado em `http://127.0.0.1:5000`.
 
 ## Testes
 
@@ -374,16 +358,6 @@ pytest
 
 ## Observações
 
--   Os exemplos de JSON deste documento são ilustrativos e devem ser
-    implementados respeitando os nomes dos campos e os códigos HTTP
-    definidos.
--   A especificação não define um formato obrigatório para o corpo das
-    respostas de erro. É recomendável padronizar as mensagens de erro em
-    JSON.
--   Para evitar problemas de precisão em cálculos monetários,
-    recomenda-se utilizar `Decimal` em vez de `float` na lógica de
-    preços e subtotais.
--   A persistência dos dados (memória ou banco de dados) deve ser
-    definida na implementação. Se for utilizado armazenamento em
-    memória, os dados poderão ser perdidos quando a aplicação for
-    encerrada.
+- Todas as respostas de erro da API seguem o formato JSON `{"erro": "..."}`.
+- Os cálculos monetários de preço, subtotal e total utilizam `Decimal` internamente para evitar imprecisões de ponto flutuante.
+- O armazenamento atual é feito em memória, portanto os produtos cadastrados são reiniciados quando o servidor é encerrado.
