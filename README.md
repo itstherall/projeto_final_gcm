@@ -32,7 +32,7 @@ seja processada de forma atômica.
 
 -   Recebe o código do produto e uma quantidade inteira.
 -   Subtrai a quantidade informada do estoque atual.
--   A operação não deve permitir que o estoque fique negativo.
+-   A operação deve permitir que o estoque fique negativo.
 
 ### 5. Venda
 
